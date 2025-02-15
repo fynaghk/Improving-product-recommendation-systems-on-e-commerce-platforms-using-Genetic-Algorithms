@@ -65,4 +65,74 @@ toolbox.register("select", tools.selTournament, tournsize=3)
 
 
 
+def run_ga():
+    population = toolbox.population(n=50)  # 50 fərqli fərd yaradırıq
+    algorithms.eaSimple(population, toolbox, cxpb=0.5, mutpb=0.2, ngen=20, verbose=True)
 
+    # Ən yaxşı fərdi (optimal tövsiyələri) tapırıq
+    best_individual = tools.selBest(population, k=1)[0]
+    recommended_products = [i for i in range(len(best_individual)) if best_individual[i] == 1]
+
+    return recommended_products
+
+# Genetik Alqoritmi İşlədək
+recommended_products = run_ga()
+
+# Tövsiyə olunan məhsulları çap edirik
+print("Tövsiyə olunan məhsullar:", recommended_products)
+
+
+
+
+
+
+
+from deap import tools
+
+# Statistik logbook üçün setup
+stats = tools.Statistics(lambda ind: ind.fitness.values)
+stats.register("avg", np.mean)
+stats.register("max", np.max)
+
+logbook = tools.Logbook()
+logbook.header = ["gen", "avg", "max"]
+
+
+
+
+pop = toolbox.population(n=50)  # 50 fərdlik başlanğıc populyasiya
+hof = tools.HallOfFame(1)  # Ən yaxşı fərdi saxlamaq üçün
+NGEN = 20  # 20 nəsil simulyasiya edək
+CXPB, MUTPB = 0.5, 0.2  # Çarpazlaşma və mutasiya ehtimalları
+
+for gen in range(NGEN):
+    offspring = algorithms.varAnd(pop, toolbox, cxpb=CXPB, mutpb=MUTPB)
+    
+    fits = list(map(toolbox.evaluate, offspring))
+    for ind, fit in zip(offspring, fits):
+        ind.fitness.values = fit
+
+    pop = toolbox.select(offspring, k=len(pop))
+    
+    record = stats.compile(pop)  # Statistikaları topla
+    logbook.record(gen=gen, **record)  # Logbook-a əlavə et
+    print(logbook.stream)  # Konsolda göstərin
+
+
+
+
+import matplotlib.pyplot as plt
+
+gen = logbook.select("gen")
+avg_fitness = logbook.select("avg")
+max_fitness = logbook.select("max")
+
+plt.figure(figsize=(8, 5))
+plt.plot(gen, avg_fitness, label="Orta Fitness", linestyle="dashed", marker="o")
+plt.plot(gen, max_fitness, label="Maksimum Fitness", marker="s")
+plt.xlabel("Nəsil")
+plt.ylabel("Fitness Dəyəri")
+plt.title("Genetik Alqoritmin İrəliləyişi")
+plt.legend()
+plt.grid()
+plt.show()
