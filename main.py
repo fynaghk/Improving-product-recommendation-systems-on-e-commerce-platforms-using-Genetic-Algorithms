@@ -202,7 +202,7 @@ drive.mount('/content/drive')
 import dask.dataframe as dd
 
 
-# 2. Dataseti yüklə (öz yolunu əlavə et əgər Google Drive istifadə edirsənsə)
+# Dataseti yükləyirik
 file_path = "/content/drive/MyDrive/amazon/amazon_reviews.tsv"
 
 # Faylı tab ilə ayrılmış formatda (TSV) oxuyuruq
@@ -212,25 +212,25 @@ df = pd.read_csv(file_path, sep="\t", encoding='utf-8', on_bad_lines='skip')
 df = df[['product_title', 'star_rating']].dropna()
 df['product_title'] = df['product_title'].str.lower()
 
-# 3. Fidanın maraqlarına uyğun açar sözlər
+# Fidanın maraqlarına uyğun açar sözləri əlavə edək
 interests = [
     "usb", "hdmi", "logitech", "keyboard", "mouse", 
     "monitor", "tech", "data", "cable", "adapter", 
     "ssd", "external hard drive", "power bank", "charger"
 ]
 
-# 4. Maraqlı məhsulları seç
+# Maraqlı məhsulları seçək
 mask = df['product_title'].apply(lambda title: any(keyword in title for keyword in interests))
 interested_products = df[mask]
 
-# 5. Ortalama reytinqi hesabla
+#  Ortalama reytinqi hesablayaq
 top_products = interested_products.groupby('product_title')['star_rating'].mean().sort_values(ascending=False).head(20)
 
-# 6. Genetik Alqoritm üçün məlumatları hazırlayırıq
+# Genetik Alqoritm üçün məlumatları hazırlayırıq
 product_titles = top_products.index.tolist()
 product_scores = top_products.values
 
-# 7. Genetik alqoritmin uyğunluq funksiyası
+# Genetik alqoritmin uyğunluq funksiyası
 def fitness(individual):
     selected = [i for i in range(len(individual)) if individual[i] == 1]
     if not selected:
@@ -238,7 +238,7 @@ def fitness(individual):
     avg_score = np.mean([product_scores[i] for i in selected])
     return (avg_score,)
 
-# 8. DEAP struktur qurulması
+# DEAP struktur qurulması
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMax)
 toolbox = base.Toolbox()
@@ -252,16 +252,16 @@ toolbox.register("mate", tools.cxTwoPoint)
 toolbox.register("mutate", tools.mutFlipBit, indpb=0.1)
 toolbox.register("select", tools.selTournament, tournsize=3)
 
-# 9. Genetik alqoritmi işə salırıq
+# Genetik alqoritmi işə salırıq
 population = toolbox.population(n=30)
 algorithms.eaSimple(population, toolbox, cxpb=0.5, mutpb=0.2, ngen=25, verbose=True)
 
-# 10. Ən yaxşı fərdi seçirik
+# Ən yaxşı fərdi seçirik
 best = tools.selBest(population, k=1)[0]
 selected_products = [product_titles[i] for i in range(len(best)) if best[i] == 1]
 
-# 11. Nəticəni göstər
-print("🔍 Fidan üçün genetik alqoritmlə tövsiyə olunan məhsullar:")
+# Nəticəni göstəririk
+print("Fidan üçün genetik alqoritmlə tövsiyə olunan məhsullar:")
 for i, p in enumerate(selected_products, 1):
     print(f"{i}. {p.title()}")
 
@@ -309,16 +309,16 @@ toolbox.register("mate", tools.cxTwoPoint)
 toolbox.register("mutate", tools.mutFlipBit, indpb=0.1)
 toolbox.register("select", tools.selTournament, tournsize=3)
 
-# Alqoritmi işə sal
+# Alqoritmi işə salırıq
 population = toolbox.population(n=30)
 algorithms.eaSimple(population, toolbox, cxpb=0.5, mutpb=0.2, ngen=25, verbose=True)
 
-# Ən yaxşı fərdi seç
+# Ən yaxşı fərdi seçək
 best = tools.selBest(population, k=1)[0]
 selected_products = [product_titles[i] for i in range(len(best)) if best[i] == 1]
 
-# Nəticəni göstər
-print("🎯 Naghiyeva Fidan üçün tövsiyə olunan məhsul kombinasiyası:")
+# Nəticəni göstəririk
+print("Naghiyeva Fidan üçün tövsiyə olunan məhsul kombinasiyası:")
 for i, product in enumerate(selected_products, 1):
     print(f"{i}. {product}")
 
